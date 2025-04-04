@@ -331,7 +331,7 @@ export class CodeAnalysisTool extends BaseTool {
    */
   private findBasicIssues(
     lines: string[],
-    languageId: string
+    _languageId: string
   ): Array<{
     message: string;
     severity: string;
@@ -398,7 +398,7 @@ export class CodeAnalysisTool extends BaseTool {
    */
   private calculateMetrics(
     lines: string[],
-    languageId: string
+    _languageId: string
   ): {
     complexity: number;
     linesOfCode: number;

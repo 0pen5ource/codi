@@ -183,7 +183,7 @@ export class FileSystemTool extends BaseTool {
   /**
    * Create a directory
    */
-  private async makeDirectory(dirPath: string, recursive: boolean = false): Promise<{ success: boolean; path: string }> {
+  private async makeDirectory(dirPath: string, _recursive: boolean = false): Promise<{ success: boolean; path: string }> {
     try {
       const uri = vscode.Uri.file(dirPath);
       await vscode.workspace.fs.createDirectory(uri);

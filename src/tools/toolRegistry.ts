@@ -4,6 +4,7 @@ import { FileSystemTool } from './fileSystemTool';
 import { TerminalTool } from './terminalTool';
 import { BrowserPreviewTool } from './browserPreviewTool';
 import { CodeAnalysisTool } from './codeAnalysisTool';
+import { CodeGenerationTool } from './codeGenerationTool';
 import { OutputPanel } from '../ui/outputPanel';
 
 /**
@@ -17,7 +18,8 @@ export function setupTools(context: vscode.ExtensionContext, outputPanel: Output
     new FileSystemTool(context),
     new TerminalTool(context, outputPanel),
     new BrowserPreviewTool(context),
-    new CodeAnalysisTool(context)
+    new CodeAnalysisTool(context),
+    new CodeGenerationTool()
   ];
 
   // Add language-specific tools based on installed language extensions

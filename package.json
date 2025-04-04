@@ -30,6 +30,16 @@
         "title": "Code Agent: Run Code"
       }
     ],
+    "configuration": {
+      "title": "Code Agent",
+      "properties": {
+        "codeAgent.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your OpenAI API key for using the code generation features"
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {

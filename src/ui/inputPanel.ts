@@ -60,11 +60,11 @@ export class InputPanel implements vscode.Disposable {
             await this.handlePromptSubmission(message.prompt, message.context);
             break;
           case 'cancel':
-            this.panel.dispose();
+            this.panel?.dispose();
             break;
           case 'getCodeContext':
             const context = await this.getActiveEditorContext();
-            this.panel.webview.postMessage({ command: 'updateContext', context });
+            this.panel?.webview.postMessage({ command: 'updateContext', context });
             break;
         }
       },
@@ -111,7 +111,7 @@ export class InputPanel implements vscode.Disposable {
       
       // Run the agent
       this.outputPanel.appendLine('Running agent...');
-      const result = await this.agentManager.runAgent(prompt, context);
+      const result = await this.agentManager.runAgent(prompt, context || undefined);
       
       // Show the result
       this.outputPanel.appendLine('Agent response:');

@@ -116,7 +116,7 @@ export class TerminalTool extends BaseTool {
     cwd: string,
     captureOutput: boolean = true
   ): Promise<{ success: boolean; stdout: string; stderr: string; exitCode: number | null }> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       // Log the command being executed
       this.outputPanel.appendLine(`Executing: ${command} in ${cwd}`);
 
@@ -134,7 +134,7 @@ export class TerminalTool extends BaseTool {
               success: false,
               stdout,
               stderr,
-              exitCode: error.code
+              exitCode: error.code||null
             });
           } else {
             if (captureOutput) {

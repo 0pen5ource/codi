@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { OpenAI } from 'openai';
 import { BaseTool } from '../tools/baseTool';
+import { ChatCompletionTool } from 'openai/resources/chat/completions';
 
 /**
  * Interface for tool execution results
@@ -85,7 +86,7 @@ export class AgentManager implements vscode.Disposable {
     }
 
     // Prepare the tools definition for the model
-    const toolDefinitions = Array.from(this.tools.values()).map(tool => ({
+    const toolDefinitions:ChatCompletionTool[]  = Array.from(this.tools.values()).map(tool => ({
       type: 'function',
       function: {
         name: tool.name,

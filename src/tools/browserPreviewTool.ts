@@ -270,7 +270,7 @@ export class BrowserPreviewTool extends BaseTool {
   /**
    * Generate the HTML content for the webview
    */
-  private getWebviewContent(url: string, previewId: string): string {
+  private getWebviewContent(url: string, _previewId: string): string {
     return `
       <!DOCTYPE html>
       <html lang="en">

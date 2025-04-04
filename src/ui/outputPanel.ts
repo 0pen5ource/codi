@@ -257,7 +257,7 @@ export class OutputPanel implements vscode.Disposable {
     // Format code blocks (text between triple backticks)
     formattedContent = formattedContent.replace(
       /```([a-z]*)\n([\s\S]*?)\n```/g,
-      (match, language, code) => {
+      (_match, _language, code) => {
         return `<div class="code-block">${this.escapeHtml(code)}</div>`;
       }
     );
@@ -265,7 +265,7 @@ export class OutputPanel implements vscode.Disposable {
     // Format inline code (text between single backticks)
     formattedContent = formattedContent.replace(
       /`([^`]+)`/g,
-      (match, code) => {
+      (_match, code) => {
         return `<code>${this.escapeHtml(code)}</code>`;
       }
     );
