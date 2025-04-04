@@ -86,8 +86,8 @@ export class AgentManager implements vscode.Disposable {
     }
 
     // Prepare the tools definition for the model
-    const toolDefinitions:ChatCompletionTool[]  = Array.from(this.tools.values()).map(tool => ({
-      type: 'function',
+    const toolDefinitions: ChatCompletionTool[] = Array.from(this.tools.values()).map(tool => ({
+      type: "function",
       function: {
         name: tool.name,
         description: tool.description,
@@ -103,6 +103,7 @@ export class AgentManager implements vscode.Disposable {
     const executionSteps: AgentExecutionStep[] = [];
     let finalResponse = '';
     let maxIterations = 10;
+    let executionLog = '# Execution Log\n\n';
     
     try {
       // Agent execution loop
@@ -119,60 +120,83 @@ export class AgentManager implements vscode.Disposable {
 
         // Check if the model wants to use a tool
         if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
-          const toolCall = responseMessage.tool_calls[0];
-          const toolName = toolCall.function.name;
-          const toolInput = JSON.parse(toolCall.function.arguments);
-
-          // Record the execution step
-          const step: AgentExecutionStep = {
-            thought: responseMessage.content || '',
-            action: 'tool_call',
-            toolName,
-            toolInput
-          };
-
-          // Execute the tool
-          const tool = this.tools.get(toolName);
-          if (tool) {
-            try {
-              const result = await tool.execute(toolInput);
-              step.result = { success: true, data: result };
-              
-              // Add the tool result to messages
-              messages.push({
-                role: 'tool',
-                tool_call_id: toolCall.id,
-                content: JSON.stringify(result)
-              });
-            } catch (error: any) {
-              step.result = { success: false, data: null, error: error.message };
-              
-              // Add the error to messages
-              messages.push({
-                role: 'tool',
-                tool_call_id: toolCall.id,
-                content: JSON.stringify({ error: error.message })
-              });
-            }
-          } else {
-            step.result = { 
-              success: false, 
-              data: null, 
-              error: `Tool '${toolName}' not found` 
-            };
-            
-            // Add the error to messages
-            messages.push({
-              role: 'tool',
-              tool_call_id: toolCall.id,
-              content: JSON.stringify({ error: `Tool '${toolName}' not found` })
-            });
+          // Add thinking to execution log if available
+          if (responseMessage.content) {
+            executionLog += `## Thinking\n${responseMessage.content}\n\n`;
           }
           
-          executionSteps.push(step);
+          // Process all tool calls in this response
+          const toolResults = [];
+          
+          for (const toolCall of responseMessage.tool_calls) {
+            const toolName = toolCall.function.name;
+            const toolInput = JSON.parse(toolCall.function.arguments);
+
+            // Record the execution step
+            const step: AgentExecutionStep = {
+              thought: responseMessage.content || '',
+              action: 'tool_call',
+              toolName,
+              toolInput
+            };
+
+            // Log the tool execution
+            executionLog += `## Executing Tool: ${toolName}\n`;
+            executionLog += `Input: \`\`\`json\n${JSON.stringify(toolInput, null, 2)}\n\`\`\`\n\n`;
+
+            // Execute the tool
+            const tool = this.tools.get(toolName);
+            if (tool) {
+              try {
+                const result = await tool.execute(toolInput);
+                step.result = { success: true, data: result };
+                
+                toolResults.push({
+                  tool_call_id: toolCall.id,
+                  role: 'tool',
+                  content: JSON.stringify(result)
+                });
+
+                // Log the result
+                executionLog += `Result: \`\`\`json\n${JSON.stringify(result, null, 2)}\n\`\`\`\n\n`;
+              } catch (error: any) {
+                step.result = { success: false, data: null, error: error.message };
+                
+                toolResults.push({
+                  tool_call_id: toolCall.id,
+                  role: 'tool',
+                  content: JSON.stringify({ error: error.message })
+                });
+
+                // Log the error
+                executionLog += `Error: ${error.message}\n\n`;
+              }
+            } else {
+              step.result = { 
+                success: false, 
+                data: null, 
+                error: `Tool '${toolName}' not found` 
+              };
+              
+              toolResults.push({
+                tool_call_id: toolCall.id,
+                role: 'tool',
+                content: JSON.stringify({ error: `Tool '${toolName}' not found` })
+              });
+
+              // Log the error
+              executionLog += `Error: Tool '${toolName}' not found\n\n`;
+            }
+            
+            executionSteps.push(step);
+          }
+          
+          // Add all tool results to messages
+          messages.push(...toolResults);
         } else {
           // Model provided a final response
           finalResponse = responseMessage.content || '';
+          executionLog += `## Summary\n${finalResponse}\n`;
           break;
         }
         
@@ -180,10 +204,13 @@ export class AgentManager implements vscode.Disposable {
       }
       
       if (maxIterations === 0) {
-        finalResponse = "Execution exceeded maximum number of steps. Here's the partial result: " + finalResponse;
+        const timeoutMessage = "Execution exceeded maximum number of steps.";
+        finalResponse = timeoutMessage + " Here's the partial result: " + finalResponse;
+        executionLog += `## Error\n${timeoutMessage}\n`;
       }
       
-      return finalResponse;
+      // Return the final response and execution log
+      return executionLog;
     } catch (error: any) {
       console.error('Error running agent:', error);
       throw new Error(`Failed to run agent: ${error.message}`);
@@ -238,6 +265,13 @@ export class AgentManager implements vscode.Disposable {
   private buildSystemPrompt(): string {
     return `You are Code Agent, a VS Code extension that helps developers write, fix, and understand code. 
 You have access to various tools to help you accomplish tasks.
+
+IMPORTANT: You must use the provided tools to create and modify files directly rather than just returning code in your response. 
+When a user asks you to create or modify code, use the appropriate file operation tools:
+- Use 'code-generation' tool for creating files, modifying files, and managing projects
+- Use 'file-system' tool for reading, writing, and manipulating files
+- Use 'terminal' tool for running commands like git operations or build processes
+
 Always think step by step and use the appropriate tools when needed.
 Analyze the code context carefully and provide helpful, accurate responses.
 When writing or modifying code, follow clean coding practices:
@@ -245,7 +279,9 @@ When writing or modifying code, follow clean coding practices:
 - Don't repeat code
 - Extract common code into functions
 - Keep code testable
-- Follow best practices for the language or framework being used`;
+- Follow best practices for the language or framework being used
+
+After using tools to make changes, summarize what you've done in a user-friendly way.`;
   }
 
   /**

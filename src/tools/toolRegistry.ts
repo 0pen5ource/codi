@@ -5,6 +5,7 @@ import { TerminalTool } from './terminalTool';
 import { BrowserPreviewTool } from './browserPreviewTool';
 import { CodeAnalysisTool } from './codeAnalysisTool';
 import { CodeGenerationTool } from './codeGenerationTool';
+import { SvgGeneratorTool } from './svgGeneratorTool';
 import { OutputPanel } from '../ui/outputPanel';
 
 /**
@@ -19,7 +20,8 @@ export function setupTools(context: vscode.ExtensionContext, outputPanel: Output
     new TerminalTool(context, outputPanel),
     new BrowserPreviewTool(context),
     new CodeAnalysisTool(context),
-    new CodeGenerationTool()
+    new CodeGenerationTool(),
+    new SvgGeneratorTool(context)
   ];
 
   // Add language-specific tools based on installed language extensions

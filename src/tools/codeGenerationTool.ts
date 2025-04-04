@@ -220,17 +220,17 @@ export class CodeGenerationTool extends BaseTool {
   }
 
   private async validateCode(input: any): Promise<any> {
-    const filePath = input.filePath;
+    const _filePath = input.filePath;
     const language = input.language;
     
     // Add language-specific validation
     switch (language) {
       case 'typescript':
-        return await this.validateTypeScript(filePath);
+        return await this.validateTypeScript(_filePath);
       case 'javascript':
-        return await this.validateJavaScript(filePath);
+        return await this.validateJavaScript(_filePath);
       case 'python':
-        return await this.validatePython(filePath);
+        return await this.validatePython(_filePath);
       default:
         return {
           success: true,
@@ -239,7 +239,7 @@ export class CodeGenerationTool extends BaseTool {
     }
   }
 
-  private async validateTypeScript(filePath: string): Promise<any> {
+  private async validateTypeScript(_filePath: string): Promise<any> {
     // Add TypeScript validation logic
     return {
       success: true,
@@ -247,7 +247,7 @@ export class CodeGenerationTool extends BaseTool {
     };
   }
 
-  private async validateJavaScript(filePath: string): Promise<any> {
+  private async validateJavaScript(_filePath: string): Promise<any> {
     // Add JavaScript validation logic
     return {
       success: true,
@@ -255,7 +255,7 @@ export class CodeGenerationTool extends BaseTool {
     };
   }
 
-  private async validatePython(filePath: string): Promise<any> {
+  private async validatePython(_filePath: string): Promise<any> {
     // Add Python validation logic
     return {
       success: true,
@@ -263,7 +263,7 @@ export class CodeGenerationTool extends BaseTool {
     };
   }
 
-  private async createWebProject(projectPath: string, input: any): Promise<any> {
+  private async createWebProject(projectPath: string, _input: any): Promise<any> {
     // Create web project structure
     const files = [
       { path: 'index.html', content: this.getBasicHTML() },
@@ -284,14 +284,14 @@ export class CodeGenerationTool extends BaseTool {
     };
   }
 
-  private async createNodeProject(projectPath: string, input: any): Promise<any> {
+  private async createNodeProject(projectPath: string, _input: any): Promise<any> {
     // Create package.json with dependencies
     const packageJson = {
       name: path.basename(projectPath),
       version: '1.0.0',
-      description: input.description || '',
+      description: _input.description || '',
       main: 'index.js',
-      dependencies: input.dependencies.reduce((acc, dep) => {
+      dependencies: _input.dependencies.reduce((acc: any, dep: string) => {
         acc[dep] = '^latest';
         return acc;
       }, {})
@@ -308,9 +308,9 @@ export class CodeGenerationTool extends BaseTool {
     };
   }
 
-  private async createPythonProject(projectPath: string, input: any): Promise<any> {
+  private async createPythonProject(projectPath: string, _input: any): Promise<any> {
     // Create requirements.txt with dependencies
-    const requirements = input.dependencies.join('\n');
+    const requirements = _input.dependencies.join('\n');
     await fs.promises.writeFile(
       path.join(projectPath, 'requirements.txt'),
       requirements
